@@ -101,7 +101,7 @@ export async function requestJson(url, data, headers) {
     const options  = makeReqOptions(url, headers, "POST");
     const postText = JSON.stringify(data);
 
-    return sendPost(options, postText, "application/json");
+    return sendPost(options, postText, "application/json;charset=utf-8");
 }
 
 /**
@@ -152,14 +152,14 @@ async function postPut(method, url, data, headers) {
     }
 
     if (typeof data === "object") {
-        return sendPost(options, JSON.stringify(data), "application/json");
+        return sendPost(options, JSON.stringify(data), "application/json;charset=utf-8");
     }
 
     if (typeof data === "string") {
-        return sendPost(options, data, "text/plain");
+        return sendPost(options, data, "text/plain;charset=utf-8");
     }
 
-    return sendPost(options, String(data), "text/plain");
+    return sendPost(options, String(data), "text/plain;charset=utf-8");
 }
 
 /**
@@ -195,8 +195,12 @@ function makeReqOptions(url, headers, method) {
  * @returns {Promise<ClientRequestResponse>}
  */
 async function sendPost(options, data, contentType) {
-    if (Buffer.isBuffer(data) || typeof data === "string") {
+    if (Buffer.isBuffer(data)) {
+        options.headers["Content-Length"] = data.length.toString();
+    } else if (typeof data === "string") {
         options.headers["Content-Length"] = Buffer.byteLength(data).toString();
+    } else {
+        options.headers["Content-Length"] = "0";
     }
 
     if (contentType && !options.headers["Content-Type"]) {
